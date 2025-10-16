@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FashionMatch | AI Fashion Recommendation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      scroll-behavior: smooth;
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #f43f5e 0%, #8b5cf6 100%);
+    }
+    .drop-zone {
+      border: 2px dashed #cbd5e1;
+      transition: all 0.3s ease;
+    }
+    .drop-zone.active {
+      border-color: #8b5cf6;
+      background-color: #faf5ff;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- Header -->
+  <nav class="bg-white shadow-sm fixed w-full z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+      <div class="flex items-center space-x-2">
+        <i data-feather="shopping-bag" class="text-pink-500"></i>
+        <span class="font-bold text-gray-900 text-lg">FashionMatch</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="pt-24 pb-12 gradient-bg text-white text-center">
+    <div class="max-w-3xl mx-auto">
+      <h1 class="text-4xl font-bold mb-4">Discover Your Perfect Fashion Matches</h1>
+      <p class="text-lg opacity-90 mb-8">Upload a clothing item and get 5 AI-powered fashion recommendations instantly.</p>
+      <a href="#uploader" class="bg-white text-pink-600 font-medium px-6 py-3 rounded-md hover:bg-gray-100 shadow-md inline-flex items-center">
+        Try It Now <i data-feather="arrow-right" class="ml-2"></i>
+      </a>
+    </div>
+  </section>
+
+  <!-- Uploader -->
+  <section id="uploader" class="py-16 bg-white">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <h2 class="text-3xl font-bold text-gray-900 mb-4">Upload Your Fashion Item</h2>
+      <p class="text-lg text-gray-600 mb-8">Our AI model will find similar styles from our collection.</p>
+
+      <form id="upload-form" method="post" action="/" enctype="multipart/form-data">
+        <div id="drop-zone" class="drop-zone rounded-lg p-8 mb-6">
+          <i data-feather="upload" class="w-12 h-12 mx-auto text-gray-400 mb-4"></i>
+          <p class="text-gray-500 mb-2">Drag & drop your fashion image here</p>
+          <p class="text-sm text-gray-400 mb-4">or</p>
+          <label for="file-upload" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+            Select Image
+            <input id="file-upload" name="file" type="file" accept="image/*" class="sr-only">
+          </label>
+        </div>
+      </form>
+
+      <div id="preview-container" class="hidden mb-6">
+        <img id="image-preview" src="#" alt="Preview" class="max-h-64 mx-auto rounded-lg shadow mb-4">
+        <button id="remove-image" class="text-red-500 text-sm flex items-center justify-center mx-auto">
+          <i data-feather="trash-2" class="w-4 h-4 mr-1"></i> Remove image
+        </button>
+      </div>
+
+      <button id="recommend-btn" disabled class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 shadow-lg transition duration-300 disabled:opacity-50">
+        <i data-feather="search" class="mr-2"></i> Find Recommendations
+      </button>
+
+      <div id="result-container" class="hidden mt-12">
+        <h3 class="text-2xl font-semibold text-gray-900 mb-6">Recommended Products</h3>
+        <div id="recommend-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    feather.replace();
+
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-upload');
+    const previewContainer = document.getElementById('preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const removeImageBtn = document.getElementById('remove-image');
+    const recommendBtn = document.getElementById('recommend-btn');
+    const resultContainer = document.getElementById('result-container');
+    const recommendGrid = document.getElementById('recommend-grid');
+
+    // Drag and drop events
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => dropZone.addEventListener(eventName, () => dropZone.classList.add('active')));
+    ['dragleave', 'drop'].forEach(eventName => dropZone.addEventListener(eventName, () => dropZone.classList.remove('active')));
+
+    dropZone.addEventListener('drop', e => {
+      const files = e.dataTransfer.files;
+      document.getElementById('file-upload').files = files;
+      handleFiles(files);
+    });
+    fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+    function handleFiles(files) {
+      const file = files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          imagePreview.src = e.target.result;
+          previewContainer.classList.remove('hidden');
+          recommendBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        alert('Please upload a valid image file.');
+      }
+    }
+
+    removeImageBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      imagePreview.src = '#';
+      previewContainer.classList.add('hidden');
+      recommendBtn.disabled = true;
+      resultContainer.classList.add('hidden');
+    });
+
+    recommendBtn.addEventListener('click', () => {
+      // submit the form to the server which will compute recommendations
+      const file = document.getElementById('file-upload').files[0];
+      if (!file) {
+        alert('Please choose an image to upload.');
+        return;
+      }
+      recommendBtn.disabled = true;
+      recommendBtn.innerHTML = '<i data-feather="loader" class="animate-spin mr-2"></i> Uploading...';
+      feather.replace();
+      document.getElementById('upload-form').submit();
+    });
+  </script>
+</body>
+</html>

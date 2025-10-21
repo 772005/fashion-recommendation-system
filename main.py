@@ -1,4 +1,12 @@
+
+import os
 import streamlit as st
+
+# Check for required model files before proceeding
+if not os.path.exists("image_features_embedding.pkl") or not os.path.exists("img_files.pkl"):
+    st.error("Required model files are missing. Please upload image_features_embedding.pkl and img_files.pkl to the app directory.")
+    st.stop()
+
 import tensorflow
 import pandas as pd
 from PIL import Image
@@ -10,7 +18,6 @@ from tensorflow.keras.layers import GlobalMaxPooling2D
 from tensorflow.keras.models import Sequential
 from numpy.linalg import norm
 from sklearn.neighbors import NearestNeighbors
-import os
 
 features_list = pickle.load(open("image_features_embedding.pkl", "rb"))
 img_files_list = pickle.load(open("img_files.pkl", "rb"))
